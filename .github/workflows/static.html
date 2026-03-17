@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Yordamchi — Asilbek Sobirov</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08070f;
+  --surface:#0f0d1c;
+  --surface2:#16132a;
+  --border:rgba(255,255,255,0.07);
+  --accent:#7b5ea7;
+  --accent2:#c084fc;
+  --accent3:#38bdf8;
+  --glow:rgba(123,94,167,0.4);
+  --text:#ede9f8;
+  --muted:#6e6a8a;
+  --user-bg:linear-gradient(135deg,#5b21b6,#7c3aed);
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;
+  overflow:hidden;position:relative;
+}
+
+/* Animated background */
+.bg-orb{
+  position:fixed;border-radius:50%;filter:blur(80px);
+  pointer-events:none;animation:drift 12s ease-in-out infinite;
+}
+.bg-orb.o1{width:500px;height:500px;background:rgba(123,94,167,0.12);top:-100px;right:-100px;animation-delay:0s}
+.bg-orb.o2{width:400px;height:400px;background:rgba(56,189,248,0.07);bottom:-80px;left:-80px;animation-delay:-4s}
+.bg-orb.o3{width:300px;height:300px;background:rgba(192,132,252,0.08);top:40%;left:30%;animation-delay:-8s}
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(15px,-20px)}66%{transform:translate(-10px,15px)}}
+
+/* Grid overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+
+#cw{
+  display:flex;flex-direction:column;
+  width:100%;max-width:720px;
+  height:92vh;max-height:760px;
+  border-radius:20px;overflow:hidden;
+  background:rgba(15,13,28,0.95);
+  border:1px solid rgba(123,94,167,0.2);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.03),
+             0 40px 100px rgba(0,0,0,0.7),
+             0 0 60px rgba(123,94,167,0.08);
+  position:relative;z-index:1;
+}
+
+/* Header */
+#hdr{
+  padding:16px 20px;
+  background:rgba(255,255,255,0.02);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.hav{
+  width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,#5b21b6,#7c3aed,#c084fc);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(123,94,167,0.5);
+  position:relative;
+}
+.hav::before{
+  content:'';position:absolute;inset:-1px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(192,132,252,0.6),rgba(56,189,248,0.3));
+  z-index:-1;opacity:0;animation:shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{opacity:0}50%{opacity:1}}
+
+.htitles{flex:1}
+.htitles h1{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.02em}
+.htitles p{font-size:11px;color:var(--muted);margin-top:1px}
+
+.status{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(16,185,129,0.08);
+  border:1px solid rgba(16,185,129,0.2);
+  font-size:11px;color:#34d399;font-weight:500;
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:#10b981;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 4px #10b981}50%{opacity:0.3;box-shadow:none}}
+
+/* Search indicator */
+#search-bar{
+  display:none;align-items:center;gap:8px;
+  padding:8px 20px;
+  background:rgba(56,189,248,0.05);
+  border-bottom:1px solid rgba(56,189,248,0.1);
+  font-size:12px;color:#38bdf8;
+  flex-shrink:0;
+}
+#search-bar.active{display:flex}
+.search-pulse{
+  width:6px;height:6px;border-radius:50%;background:#38bdf8;
+  animation:spulse 0.8s ease-in-out infinite;
+}
+@keyframes spulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:0.5}}
+
+/* Messages */
+#msgs{
+  flex:1;overflow-y:auto;
+  padding:20px 16px;
+  display:flex;flex-direction:column;gap:14px;
+  scroll-behavior:smooth;
+}
+#msgs::-webkit-scrollbar{width:2px}
+#msgs::-webkit-scrollbar-thumb{background:rgba(123,94,167,0.3);border-radius:2px}
+
+.mrow{display:flex;gap:9px;align-items:flex-end;max-width:88%}
+.mrow.u{align-self:flex-end;flex-direction:row-reverse}
+
+.mav{
+  width:30px;height:30px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+.mav.ai{
+  background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  color:#e9d5ff;font-size:14px;
+  box-shadow:0 2px 10px rgba(123,94,167,0.4);
+}
+.mav.usr{
+  background:rgba(123,94,167,0.15);color:#c084fc;
+  border:1px solid rgba(123,94,167,0.25);
+  font-family:'Syne',sans-serif;
+}
+
+.bbl{
+  padding:11px 15px;
+  font-size:13.5px;line-height:1.75;
+  word-break:break-word;max-width:100%;
+  color:var(--text);
+}
+.bbl.ai{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:4px 16px 16px 16px;
+}
+.bbl.u{
+  background:var(--user-bg);
+  color:#f3e8ff;
+  border-radius:16px 4px 16px 16px;
+  box-shadow:0 4px 20px rgba(91,33,182,0.4);
+}
+.ts{font-size:10px;color:var(--muted);margin-top:3px;padding:0 2px}
+.mrow.u .ts{text-align:right}
+
+/* Source badge */
+.src-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:10px;
+  background:rgba(56,189,248,0.08);
+  border:1px solid rgba(56,189,248,0.2);
+  font-size:10px;color:#38bdf8;
+  margin-top:6px;
+}
+
+/* Typing */
+.typing{display:flex;gap:4px;padding:4px 2px;align-items:center}
+.typing span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--muted);animation:tdot 1.4s infinite;
+}
+.typing span:nth-child(2){animation-delay:.18s}
+.typing span:nth-child(3){animation-delay:.36s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-5px);opacity:1}}
+
+/* Chips */
+.qchips{
+  display:flex;flex-wrap:wrap;gap:5px;
+  padding:10px 16px 12px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.qchip{
+  padding:5px 12px;border-radius:20px;
+  font-size:11.5px;font-family:'DM Sans',sans-serif;
+  border:1px solid rgba(255,255,255,0.08);
+  background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .2s;
+}
+.qchip:hover{
+  border-color:rgba(123,94,167,0.5);
+  color:var(--accent2);
+  background:rgba(123,94,167,0.08);
+  transform:translateY(-1px);
+}
+
+/* Input */
+#inp{
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+  background:rgba(255,255,255,0.015);
+  display:flex;align-items:flex-end;gap:8px;flex-shrink:0;
+}
+#txt{
+  flex:1;resize:none;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:10px 15px;
+  font-size:13.5px;font-family:'DM Sans',sans-serif;
+  background:rgba(255,255,255,0.04);
+  color:var(--text);outline:none;
+  max-height:110px;line-height:1.6;
+  transition:border-color .15s,box-shadow .15s;
+}
+#txt:focus{
+  border-color:rgba(123,94,167,0.45);
+  box-shadow:0 0 0 3px rgba(123,94,167,0.08);
+}
+#txt::placeholder{color:rgba(110,106,138,0.6)}
+
+#sbtn{
+  width:40px;height:40px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  color:#e9d5ff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:all .15s;
+  box-shadow:0 4px 15px rgba(91,33,182,0.45);
+}
+#sbtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(91,33,182,0.6)}
+#sbtn:active{transform:translateY(0)}
+#sbtn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+.msgfade{animation:mfade .3s ease}
+@keyframes mfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+#footer{
+  text-align:center;padding:7px;
+  font-size:10px;color:rgba(110,106,138,0.35);
+  flex-shrink:0;font-family:'Syne',sans-serif;letter-spacing:0.05em;
+}
+#footer b{color:rgba(192,132,252,0.5)}
+
+/* Code blocks */
+.bbl pre{
+  background:rgba(0,0,0,0.3);border-radius:8px;
+  padding:10px 12px;margin:6px 0;
+  overflow-x:auto;font-size:12px;
+  border:1px solid rgba(255,255,255,0.06);
+  font-family:'Courier New',monospace;
+}
+.bbl code{
+  background:rgba(123,94,167,0.15);
+  padding:1px 5px;border-radius:4px;
+  font-size:12px;font-family:'Courier New',monospace;
+  color:#c084fc;
+}
+.bbl pre code{background:transparent;padding:0;color:#e2d9f3}
+</style>
+</head>
+<body>
+<div class="bg-orb o1"></div>
+<div class="bg-orb o2"></div>
+<div class="bg-orb o3"></div>
+
+<div id="cw">
+  <div id="hdr">
+    <div class="hav">✦</div>
+    <div class="htitles">
+      <h1>Aqlli AI Yordamchi</h1>
+      <p>Asilbek Sobirov tomonidan yaratilgan · Internet orqali qidiradi</p>
+    </div>
+    <div class="status"><div class="sdot"></div>Faol</div>
+  </div>
+
+  <div id="search-bar">
+    <div class="search-pulse"></div>
+    <span id="search-text">Internet'da qidirilmoqda...</span>
+  </div>
+
+  <div id="msgs">
+    <div class="mrow msgfade">
+      <div class="mav ai">✦</div>
+      <div>
+        <div class="bbl ai">Assalomu alaykum! 👋<br><br>Men <b>Asilbek Sobirov</b> tomonidan yaratilgan aqlli AI yordamchiman. Har qanday savolingizga javob bera olaman — fan, texnologiya, tarix, matematika, dasturlash, yangiliklar va boshqa ko'plab mavzularda.<br><br>🔍 <b>Internet qidirish</b> imkoniyatim bor — eng yangi ma'lumotlarni ham topib berolaman! So'raning! 🚀</div>
+        <div class="ts">Hozir</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qchips" id="chips">
+    <div class="qchip">🔬 Ilm-fan</div>
+    <div class="qchip">💻 Dasturlash</div>
+    <div class="qchip">📚 Tarix</div>
+    <div class="qchip">🧮 Matematika</div>
+    <div class="qchip">🌍 Dunyo yangiliklari</div>
+    <div class="qchip">💡 Maslahat</div>
+    <div class="qchip">🎨 Ijodkorlik</div>
+    <div class="qchip">🧠 Psixologiya</div>
+  </div>
+
+  <div id="inp">
+    <textarea id="txt" rows="1" placeholder="Istalgan savolingizni yozing..."></textarea>
+    <button id="sbtn" title="Yuborish">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="footer">Yaratuvchi: <b>Asilbek Sobirov</b> · Web search · Claude AI</div>
+</div>
+
+<script>
+const msgsEl = document.getElementById('msgs');
+const txtEl  = document.getElementById('txt');
+const sbtn   = document.getElementById('sbtn');
+const chips  = document.querySelectorAll('.qchip');
+const searchBar = document.getElementById('search-bar');
+const searchText = document.getElementById('search-text');
+const history = [];
+
+const SYSTEM = `Siz Asilbek Sobirov tomonidan yaratilgan aqlli, do'stona va bilimdon O'zbek tilidagi AI yordamchisiz. Sizda internet qidirish imkoniyati bor.
+
+Muhim qoidalar:
+- HAR DOIM O'zbek tilida javob bering
+- "Seni kim yaratdi?" yoki "Yaratuvching kim?" degan savollarga: "Meni Asilbek Sobirov yaratgan" deb javob bering
+- Aniq, tushunarli va foydali javoblar bering
+- Ilmiy va texnik savollarga to'liq va sodda tushuntirish bering
+- Kerak bo'lsa, misollar va qadamlar bilan tushuntiring
+- Emojidan o'rinli foydalaning
+- Foydalanuvchiga doimo hurmat bilan muomala qiling
+- Agar bilmasangiz yoki aniq ma'lumot kerak bo'lsa, web search ishlatib eng yangi ma'lumot toping
+- Hech qachon "bilmayman" deb qo'ya qolmang — har doim web searchdan foydalaning
+- Yangiliklar, hozirgi voqealar, narxlar, ob-havo va boshqa dolzarb ma'lumotlar uchun ALBATTA web search ishlatilsin`;
+
+const chipPrompts = {
+  '🔬 Ilm-fan':       'Ilm-fan haqida eng qiziqarli so\'nggi kashfiyotlardan birini aytib bering',
+  '💻 Dasturlash':    'Dasturlashni noldan qanday o\'rganish kerak? Bosqichma-bosqich ayting',
+  '📚 Tarix':         'O\'zbekiston tarixidan eng qiziqarli voqealardan birini aytib bering',
+  '🧮 Matematika':    'Kundalik hayotda matematika qanday ishlatiladi? Misollar bering',
+  '🌍 Dunyo yangiliklari': 'Bugungi dunyodagi eng muhim yangiliklar nimalar?',
+  '💡 Maslahat':      'Hayotda muvaffaqiyatli bo\'lish uchun eng muhim maslahatlarni bering',
+  '🎨 Ijodkorlik':    'Ijodkorlikni rivojlantirish uchun nima qilish kerak?',
+  '🧠 Psixologiya':   'Insonning xotirasi va o\'rganish qobiliyati haqida qiziqarli ma\'lumot bering'
+};
+
+function getTime(){
+  const n=new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+function addMsg(role, html, isSearch=false){
+  const row=document.createElement('div');
+  row.className='mrow msgfade'+(role==='user'?' u':'');
+  const av=document.createElement('div');
+  av.className='mav '+(role==='user'?'usr':'ai');
+  av.textContent=role==='user'?'S':'✦';
+  const inner=document.createElement('div');
+  const bbl=document.createElement('div');
+  bbl.className='bbl '+(role==='user'?'u':'ai');
+  bbl.innerHTML=html;
+  if(isSearch && role!=='user'){
+    const badge=document.createElement('div');
+    badge.className='src-badge';
+    badge.innerHTML='🔍 Internet orqali topildi';
+    bbl.appendChild(badge);
+  }
+  const ts=document.createElement('div');
+  ts.className='ts';
+  ts.textContent=getTime();
+  inner.appendChild(bbl);
+  inner.appendChild(ts);
+  if(role==='user'){row.appendChild(inner);row.appendChild(av);}
+  else{row.appendChild(av);row.appendChild(inner);}
+  msgsEl.appendChild(row);
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+  return bbl;
+}
+
+function showTyping(){
+  const row=document.createElement('div');
+  row.className='mrow msgfade';row.id='typing';
+  const av=document.createElement('div');
+  av.className='mav ai';av.textContent='✦';
+  const bbl=document.createElement('div');
+  bbl.className='bbl ai';
+  bbl.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  row.appendChild(av);row.appendChild(bbl);
+  msgsEl.appendChild(row);
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+}
+
+function hideTyping(){
+  const t=document.getElementById('typing');
+  if(t)t.remove();
+}
+
+function formatReply(text){
+  // Code blocks
+  text=text.replace(/```(\w*)\n?([\s\S]*?)```/g,(m,lang,code)=>`<pre><code>${code.trim().replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`);
+  // Inline code
+  text=text.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // Bold
+  text=text.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
+  // Italic
+  text=text.replace(/\*(.*?)\*/g,'<i>$1</i>');
+  // Newlines (but not inside pre)
+  text=text.replace(/\n/g,'<br>');
+  return text;
+}
+
+function showSearch(msg){
+  searchText.textContent=msg||"Internet'da qidirilmoqda...";
+  searchBar.classList.add('active');
+}
+function hideSearch(){
+  searchBar.classList.remove('active');
+}
+
+async function send(text){
+  if(!text.trim())return;
+  txtEl.value='';txtEl.style.height='auto';
+  sbtn.disabled=true;
+  document.getElementById('chips').style.display='none';
+
+  addMsg('user',text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'));
+  history.push({role:'user',content:text});
+  showTyping();
+
+  // Web search tool configuration
+  const tools=[{
+    type:"web_search_20250305",
+    name:"web_search"
+  }];
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        system:SYSTEM,
+        tools:tools,
+        messages:history
+      })
+    });
+
+    const d=await res.json();
+    let reply='';
+    let usedSearch=false;
+
+    // Handle tool use (web search)
+    if(d.stop_reason==='tool_use'){
+      showSearch("Internet'da qidirilmoqda...");
+      
+      // Add assistant message with tool use to history
+      history.push({role:'assistant',content:d.content});
+
+      // Find tool use blocks and build tool results
+      const toolResults=[];
+      for(const block of d.content){
+        if(block.type==='tool_use'){
+          usedSearch=true;
+          showSearch(`"${block.input?.query||'...'}" qidirilmoqda`);
+          // We need to tell the model we got results - the API handles actual search
+          toolResults.push({
+            type:'tool_result',
+            tool_use_id:block.id,
+            content:'Web search completed successfully.'
+          });
+        }
+      }
+
+      // Add tool results to history and make second call
+      history.push({role:'user',content:toolResults});
+
+      const res2=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:1500,
+          system:SYSTEM,
+          tools:tools,
+          messages:history
+        })
+      });
+
+      const d2=await res2.json();
+      reply=d2.content?.find(b=>b.type==='text')?.text||'Kechirasiz, javob olishda muammo yuz berdi.';
+      history.push({role:'assistant',content:reply});
+    } else {
+      // Direct answer (no search needed)
+      reply=d.content?.find(b=>b.type==='text')?.text||'Kechirasiz, xatolik yuz berdi.';
+      history.push({role:'assistant',content:reply});
+    }
+
+    hideTyping();
+    hideSearch();
+    addMsg('bot',formatReply(reply),usedSearch);
+
+  }catch(e){
+    hideTyping();
+    hideSearch();
+    console.error(e);
+    addMsg('bot','⚠️ Xatolik yuz berdi. Internet aloqangizni tekshirib, qayta urinib ko\'ring.');
+  }
+
+  sbtn.disabled=false;
+  txtEl.focus();
+}
+
+sbtn.addEventListener('click',()=>send(txtEl.value));
+txtEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(txtEl.value);}
+});
+txtEl.addEventListener('input',()=>{
+  txtEl.style.height='auto';
+  txtEl.style.height=Math.min(txtEl.scrollHeight,110)+'px';
+});
+chips.forEach(c=>{
+  c.addEventListener('click',()=>send(chipPrompts[c.textContent]||c.textContent));
+});
+</script>
+</body>
+  </html>
