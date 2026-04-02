@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMM Panel PRO</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color:white;
+  text-align:center;
+}
+
+/* NAVBAR */
+.navbar{
+  padding:15px;
+  background:#020617;
+  font-weight:bold;
+}
+
+/* BOX */
+.box{
+  width:320px;
+  margin:20px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+input, select, button{
+  width:100%;
+  margin:10px 0;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  font-size:16px;
+}
+
+button{
+  background: linear-gradient(45deg, purple, blue);
+  color:white;
+  box-shadow:0 0 10px blue;
+  cursor:pointer;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+.hidden{
+  display:none;
+}
+
+.result{
+  margin-top:10px;
+  color:yellow;
+}
+
+/* MOBILE */
+@media (max-width:600px){
+  .box{
+    width:90%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">🚀 SMM PANEL PRO</div>
+
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <h3>Login</h3>
+  <input id="login" placeholder="Login">
+  <input id="password" type="password" placeholder="Parol">
+  <button onclick="login()">Kirish</button>
+</div>
+
+<!-- PANEL -->
+<div class="box hidden" id="panel">
+  <h3>💰 Balans: <span id="balans">0</span> so‘m</h3>
+
+  <select id="service" onchange="hisobla()">
+    <option value="10">Instagram Likes (10 so‘m)</option>
+    <option value="5">TikTok Views (5 so‘m)</option>
+    <option value="20">YouTube Subs (20 so‘m)</option>
+  </select>
+
+  <input id="miqdor" type="number" placeholder="Miqdor" oninput="hisobla()">
+
+  <div class="result" id="narx">Narx: 0 so‘m</div>
+
+  <button onclick="buyurtma()">Buyurtma berish</button>
+
+  <p id="natija"></p>
+</div>
+
+<script>
+// USER (demo)
+let user = {
+  login:"admin",
+  password:"1234",
+  balans:10000
+};
+
+// LOGIN
+function login(){
+  let l = document.getElementById("login").value;
+  let p = document.getElementById("password").value;
+
+  if(l === user.login && p === user.password){
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+    document.getElementById("balans").innerText = user.balans;
+  }else{
+    alert("❌ Xato login yoki parol");
+  }
+}
+
+// NARX HISOBLA
+function hisobla(){
+  let narx = document.getElementById("service").value;
+  let miqdor = document.getElementById("miqdor").value;
+
+  let jami = narx * miqdor;
+  if(!miqdor) jami = 0;
+
+  document.getElementById("narx").innerText = "Narx: " + jami + " so‘m";
+}
+
+// BUYURTMA
+function buyurtma(){
+  let narx = document.getElementById("service").value;
+  let miqdor = document.getElementById("miqdor").value;
+  let jami = narx * miqdor;
+
+  if(user.balans >= jami){
+    user.balans -= jami;
+    document.getElementById("balans").innerText = user.balans;
+    document.getElementById("natija").innerText = "✅ Buyurtma qabul qilindi";
+  }else{
+    document.getElementById("natija").innerText = "❌ Balans yetarli emas";
+  }
+}
+</script>
+
+</body>
+</html>
